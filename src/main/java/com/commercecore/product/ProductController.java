@@ -2,6 +2,7 @@ package com.commercecore.product;
 
 import com.commercecore.common.ConflictException;
 import com.commercecore.common.ResourceNotFoundException;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +35,7 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @SecurityRequirement(name = "bearerAuth")
     public ProductResponse create(@Valid @RequestBody CreateProductRequest request) {
         if (productRepository.existsBySku(request.sku())) {
             throw new ConflictException("SKU already exists: " + request.sku());
@@ -43,6 +45,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
     public ProductResponse update(@PathVariable Long id, @Valid @RequestBody UpdateProductRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
@@ -55,6 +58,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @SecurityRequirement(name = "bearerAuth")
     public void delete(@PathVariable Long id) {
         if (!productRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product not found: " + id);

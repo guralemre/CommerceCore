@@ -2,6 +2,7 @@ package com.commercecore.inventory;
 
 import com.commercecore.common.ResourceNotFoundException;
 import com.commercecore.product.ProductRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/inventory")
+@SecurityRequirement(name = "bearerAuth")
 public class InventoryController {
 
     private final InventoryService inventoryService;
