@@ -56,6 +56,14 @@ public class Inventory extends BaseEntity {
         quantity -= amount;
     }
 
+    public void adjustQuantityTo(int newQuantity) {
+        if (newQuantity < reservedQuantity) {
+            throw new IllegalArgumentException(
+                    "Cannot set quantity (" + newQuantity + ") below reserved quantity (" + reservedQuantity + ")");
+        }
+        quantity = newQuantity;
+    }
+
     public Product getProduct() {
         return product;
     }

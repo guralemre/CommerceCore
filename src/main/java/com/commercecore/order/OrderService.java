@@ -89,8 +89,10 @@ public class OrderService {
             order.transitionTo(OrderStatus.FAILED);
         }
 
+        // Order must exist before Payment (not-null FK to order_id) can be saved.
+        Order savedOrder = orderRepository.save(order);
         paymentRepository.save(payment);
-        return orderRepository.save(order);
+        return savedOrder;
     }
 
     private Map<Long, Inventory> lockInventory(Order order) {
