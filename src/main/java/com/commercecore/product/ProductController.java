@@ -1,5 +1,7 @@
 package com.commercecore.product;
 
+import com.commercecore.common.ConflictException;
+import com.commercecore.common.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -35,7 +36,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse create(@Valid @RequestBody CreateProductRequest request) {
         if (productRepository.existsBySku(request.sku())) {
-            throw new IllegalArgumentException("SKU already exists: " + request.sku());
+            throw new ConflictException("SKU already exists: " + request.sku());
         }
         Product product = new Product(request.sku(), request.name(), request.description(), request.price());
         return ProductResponse.from(productRepository.save(product));
@@ -44,7 +45,7 @@ public class ProductController {
     @PutMapping("/{id}")
     public ProductResponse update(@PathVariable Long id, @Valid @RequestBody UpdateProductRequest request) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
         product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
@@ -56,7 +57,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         if (!productRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: " + id);
+            throw new ResourceNotFoundException("Product not found: " + id);
         }
         productRepository.deleteById(id);
     }

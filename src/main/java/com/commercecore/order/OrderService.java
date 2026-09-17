@@ -1,5 +1,6 @@
 package com.commercecore.order;
 
+import com.commercecore.common.ResourceNotFoundException;
 import com.commercecore.inventory.Inventory;
 import com.commercecore.inventory.InventoryRepository;
 import com.commercecore.payment.Payment;
@@ -51,12 +52,12 @@ public class OrderService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         Order order = new Order(user);
         for (OrderLine line : lines) {
             Product product = productRepository.findById(line.productId())
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + line.productId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + line.productId()));
             order.addItem(new OrderItem(product, line.quantity(), product.getPrice()));
         }
 
@@ -103,7 +104,7 @@ public class OrderService {
                 continue;
             }
             Inventory inventory = inventoryRepository.findByProductIdForUpdate(productId)
-                    .orElseThrow(() -> new IllegalStateException("No inventory record for product " + productId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product " + productId + " has no inventory record"));
             inventories.put(productId, inventory);
         }
         return inventories;

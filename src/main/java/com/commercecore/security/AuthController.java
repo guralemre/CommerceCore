@@ -1,5 +1,6 @@
 package com.commercecore.security;
 
+import com.commercecore.common.ConflictException;
 import com.commercecore.user.Role;
 import com.commercecore.user.User;
 import com.commercecore.user.UserRepository;
@@ -37,7 +38,7 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already registered: " + request.email());
+            throw new ConflictException("Email already registered: " + request.email());
         }
 
         User user = new User(
