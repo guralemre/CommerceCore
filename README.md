@@ -72,6 +72,19 @@ Once it's up, **`http://localhost:8080/swagger-ui/index.html`** lists every endp
 fire real requests at it — hit `/api/auth/login`, paste the `accessToken` into the panel's
 Authorize button, and everything else below is one click away.
 
+### Postman
+
+A ready-to-import collection (auth flow, every endpoint, token/product-id handoff wired up via
+test scripts) lives outside this repo — ask for it if you want one. The screenshots below are
+from an actual run against this collection, not mocked up:
+
+| | |
+|---|---|
+| ![Collection overview](docs/screenshots/01-collection-overview.png) Collection overview — Auth, Products, Inventory, Orders, Users, Supplier | ![Register](docs/screenshots/02-register-customer.png) `POST /api/auth/register` — 201, token auto-saved |
+| ![Login as admin](docs/screenshots/03-login-admin.png) `POST /api/auth/login` as the bootstrap admin | ![Create product](docs/screenshots/04-create-product.png) `POST /api/products` (ADMIN) — 201 |
+| ![Set stock to 1](docs/screenshots/05-set-stock.png) `POST /api/inventory/{id}/stock` — quantity set to 1 | ![Order succeeds](docs/screenshots/06-place-order-success.png) `POST /api/orders` — 201 CONFIRMED |
+| ![Order rejected](docs/screenshots/07-place-order-conflict.png) Same request again, stock now 0 — clean 409, not a stack trace | ![XML supplier import](docs/screenshots/08-xml-supplier-import.png) `POST /api/supplier/inventory-updates` — the README's own XML example, for real |
+
 ## API
 
 All request/response bodies are JSON. Protected endpoints take `Authorization: Bearer <token>`.
