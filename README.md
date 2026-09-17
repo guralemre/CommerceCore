@@ -4,7 +4,7 @@ Production-style, concurrent e-commerce backend built with Java & Spring Boot. M
 
 ## Stack
 
-Java 21 · Spring Boot 3 · Spring Data JPA / Hibernate · PostgreSQL · Spring Security + JWT · Docker / Docker Compose · Maven
+Java 21 · Spring Boot 3 · Spring Data JPA / Hibernate · PostgreSQL · Spring Security + JWT · Docker / Docker Compose · Jenkins · Maven
 
 ## Architecture
 
@@ -190,9 +190,12 @@ pessimistic-locking order workflow described above, global exception handling, a
 Swagger UI panel, XML/JAXB supplier inventory import (XXE-hardened), a Mockito unit-test suite
 for every `@Service` class (26 tests: `OrderServiceTest`, `InventoryServiceTest`,
 `CustomUserDetailsServiceTest`, `JwtServiceTest`, `SupplierInventoryImportServiceTest`),
-`OrderControllerIntegrationTest` — a Testcontainers integration test that drives the concurrency
-scenario over real HTTP against a real Postgres instead of mocks — and a JMeter load test with
-real, reproducible results (see [Performance test](#performance-test) above).
+`OrderControllerIT` — a Testcontainers integration test that drives the concurrency
+scenario over real HTTP against a real Postgres instead of mocks — a JMeter load test with
+real, reproducible results (see [Performance test](#performance-test) above), and a
+[Jenkinsfile](Jenkinsfile) (Checkout -> Compile -> Unit Tests -> Integration Tests -> Package ->
+Docker Build -> Deploy; every stage's underlying command verified to actually work on this
+machine — see the Jenkinsfile's own header comment for the one thing it doesn't do yet, wiring a
+real deploy target).
 
-**Not yet built:**
-- Jenkins CI/CD pipeline
+Every gap from the original plan is closed.

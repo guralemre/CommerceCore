@@ -137,6 +137,26 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!--
+                Surefire's default includes (**/*Test.java, **/*Tests.java, ...) never match
+                *IT.java, so `mvn test` only ever runs the plain Mockito unit tests. Failsafe's
+                default includes are the complement (**/*IT.java, **/IT*.java, **/*ITCase.java)
+                bound to integration-test/verify, which is what actually needs Docker
+                (Testcontainers). This split is what lets the Jenkinsfile's "Unit Tests" and
+                "Integration Tests" stages be genuinely different commands, not just labels.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
