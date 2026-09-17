@@ -89,6 +89,7 @@ All request/response bodies are JSON. Protected endpoints take `Authorization: B
 | POST | `/api/orders` | authenticated | `{items:[{productId,quantity}]}` -> runs the workflow above |
 | GET | `/api/users/me` | authenticated | caller's own profile |
 | PATCH | `/api/users/{id}/role` | ADMIN | `{role:"ADMIN"\|"CUSTOMER"}` — refuses to demote the last remaining admin (409) |
+| POST | `/api/supplier/inventory-updates` | ADMIN | `Content-Type: application/xml`, body per [XML/JAXB import](#xmljaxb-supplier-import) below |
 
 ### Admin provisioning
 
@@ -99,6 +100,24 @@ promotes, if that email already registered as a customer) that account. It delib
 falls back to a guessable default password — set both env vars or provision manually
 (`UPDATE users SET role = 'ADMIN' WHERE email = '...'`). Every admin after the first is promoted
 through `PATCH /api/users/{id}/role` by an existing admin.
+
+### XML/JAXB supplier import
+
+```xml
+<inventoryUpdate>
+    <product>
+        <sku>IPHONE-17-256</sku>
+        <quantity>25</quantity>
+    </product>
+</inventoryUpdate>
+```
+
+`SupplierInventoryImportService` unmarshals this via JAXB and applies each line through the same
+`InventoryService.setStock` the admin stock endpoint uses. A batch doesn't abort on one bad
+line — the response lists which SKUs updated and which failed (unknown SKU, negative quantity)
+separately. Unmarshalling goes through a StAX `XMLInputFactory` with DTDs and external entities
+both disabled, so a crafted feed can't XXE its way into reading local files — this is external
+input, not internal data.
 
 ### Error responses
 
@@ -126,12 +145,12 @@ for the authoritative shape.
 **Built:** entities + repositories for all six modules, JWT auth (register/login, role-gated
 routes, admin bootstrap/provisioning), REST controllers for products/inventory/orders/users, the
 pessimistic-locking order workflow described above, global exception handling, an interactive
-Swagger UI panel, and a Mockito unit-test suite for every `@Service` class (20 tests:
-`OrderServiceTest`, `InventoryServiceTest`, `CustomUserDetailsServiceTest`, `JwtServiceTest`).
+Swagger UI panel, XML/JAXB supplier inventory import (XXE-hardened), a Mockito unit-test suite
+for every `@Service` class (26 tests: `OrderServiceTest`, `InventoryServiceTest`,
+`CustomUserDetailsServiceTest`, `JwtServiceTest`, `SupplierInventoryImportServiceTest`), and
+`OrderControllerIntegrationTest` — a Testcontainers integration test that drives the concurrency
+scenario over real HTTP against a real Postgres instead of mocks.
 
 **Not yet built:**
-- XML/JAXB supplier inventory import
-- Testcontainers integration tests (`OrderControllerIntegrationTest` etc. — exercises the real
-  concurrency scenario end-to-end against a real Postgres, not mocks)
 - JMeter/Gatling load test and results
 - Jenkins CI/CD pipeline
