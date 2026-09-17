@@ -2,6 +2,7 @@ package com.commercecore.common;
 
 import com.commercecore.inventory.InsufficientStockException;
 import com.commercecore.order.InvalidOrderStateTransitionException;
+import com.commercecore.supplier.SupplierXmlParseException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({InsufficientStockException.class, InvalidOrderStateTransitionException.class})
     public ResponseEntity<ApiError> handleDomainConflict(RuntimeException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(SupplierXmlParseException.class)
+    public ResponseEntity<ApiError> handleSupplierXmlParse(SupplierXmlParseException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
