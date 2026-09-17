@@ -59,12 +59,18 @@ docker compose up -d postgres
 ```
 
 The app reads `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USERNAME`/`DB_PASSWORD`/`JWT_SECRET` from the
-environment (see [application.yml](src/main/resources/application.yml) for defaults). Or run the
-whole stack, app included:
+environment (see [application.yml](src/main/resources/application.yml) for defaults). Set
+`ADMIN_EMAIL`/`ADMIN_PASSWORD` on first boot to auto-create an admin account (see
+[Admin provisioning](#admin-provisioning) below) — without them there's no ADMIN user at all yet.
+Or run the whole stack, app included:
 
 ```bash
 docker compose up -d
 ```
+
+Once it's up, **`http://localhost:8080/swagger-ui/index.html`** lists every endpoint and lets you
+fire real requests at it — hit `/api/auth/login`, paste the `accessToken` into the panel's
+Authorize button, and everything else below is one click away.
 
 ## API
 
@@ -81,9 +87,18 @@ All request/response bodies are JSON. Protected endpoints take `Authorization: B
 | POST | `/api/inventory/{productId}/stock` | ADMIN | `{quantity}` — sets absolute stock, upserts the row |
 | GET | `/api/orders?page=&size=` | authenticated | caller's own orders |
 | POST | `/api/orders` | authenticated | `{items:[{productId,quantity}]}` -> runs the workflow above |
+| GET | `/api/users/me` | authenticated | caller's own profile |
+| PATCH | `/api/users/{id}/role` | ADMIN | `{role:"ADMIN"\|"CUSTOMER"}` — refuses to demote the last remaining admin (409) |
 
-There's currently no endpoint to promote a user to `ADMIN` — do it directly in the database
-(`UPDATE users SET role = 'ADMIN' WHERE email = '...'`) until an admin-provisioning flow exists.
+### Admin provisioning
+
+Promoting a user to `ADMIN` normally requires an `ADMIN` token — but a fresh database has none,
+so that's a chicken-and-egg problem. `AdminBootstrapRunner` solves it on startup: if no `ADMIN`
+exists and both `ADMIN_EMAIL`/`ADMIN_PASSWORD` are set in the environment, it creates (or
+promotes, if that email already registered as a customer) that account. It deliberately never
+falls back to a guessable default password — set both env vars or provision manually
+(`UPDATE users SET role = 'ADMIN' WHERE email = '...'`). Every admin after the first is promoted
+through `PATCH /api/users/{id}/role` by an existing admin.
 
 ### Error responses
 
@@ -109,12 +124,14 @@ for the authoritative shape.
 ## Status
 
 **Built:** entities + repositories for all six modules, JWT auth (register/login, role-gated
-routes), REST controllers for products/inventory/orders, the pessimistic-locking order
-workflow described above, global exception handling.
+routes, admin bootstrap/provisioning), REST controllers for products/inventory/orders/users, the
+pessimistic-locking order workflow described above, global exception handling, an interactive
+Swagger UI panel, and a Mockito unit-test suite for every `@Service` class (20 tests:
+`OrderServiceTest`, `InventoryServiceTest`, `CustomUserDetailsServiceTest`, `JwtServiceTest`).
 
 **Not yet built:**
-- `GET /api/users/me`, admin user-provisioning
 - XML/JAXB supplier inventory import
-- Automated test suite (unit + Testcontainers integration tests)
+- Testcontainers integration tests (`OrderControllerIntegrationTest` etc. — exercises the real
+  concurrency scenario end-to-end against a real Postgres, not mocks)
 - JMeter/Gatling load test and results
 - Jenkins CI/CD pipeline
